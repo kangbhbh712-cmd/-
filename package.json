@@ -1,0 +1,20 @@
+{
+  "name": "ai-roundtable",
+  "version": "1.0.0",
+  "description": "Claude, GPT, Gemini가 한 자리에서 토론하는 웹앱",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "demo": "MOCK_MODE=true node server.js"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.12.0",
+    "@google/genai": "^3.6.1",
+    "openai": "^7.62.0"
+  }
+}
