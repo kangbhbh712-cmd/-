@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 라운드테이블</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='none' stroke='%23888' stroke-width='3'/><circle cx='16' cy='5' r='4' fill='%23D97757'/><circle cx='6.5' cy='21.5' r='4' fill='%2310A37F'/><circle cx='25.5' cy='21.5' r='4' fill='%234C8DF6'/></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dots" aria-hidden="true"><i class="dot claude"></i><i class="dot gpt"></i><i class="dot gemini"></i></span>
+      <h1>AI 라운드테이블</h1>
+    </div>
+    <span id="status" class="status" data-state="idle">대기 중</span>
+  </header>
+
+  <div id="mockBanner" class="banner" hidden>
+    데모 모드입니다. 실제 AI가 아니라 미리 만든 가짜 응답이 나옵니다. <code>.env</code>에 API 키를 넣고 <code>npm start</code>로 실행하세요.
+  </div>
+
+  <main class="layout">
+    <aside class="panel" id="setup">
+      <form id="setupForm" autocomplete="off">
+        <label class="field">
+          <span class="label">토론 주제</span>
+          <textarea id="topic" rows="3" required placeholder="예: AI가 인간의 일자리를 대체하는 것은 막아야 할까?"></textarea>
+        </label>
+
+        <label class="field">
+          <span class="label">토론 방식</span>
+          <select id="mode">
+            <option value="debate">자유 토론</option>
+            <option value="procon">찬반 토론</option>
+            <option value="brainstorm">브레인스토밍</option>
+            <option value="consensus">합의 도출</option>
+          </select>
+          <span class="hint" id="modeHint"></span>
+        </label>
+
+        <div class="field">
+          <span class="label">참여자 <span class="hint-inline">위에서부터 발언 순서</span></span>
+          <ol id="participants" class="participants"></ol>
+        </div>
+
+        <div class="row">
+          <label class="field">
+            <span class="label">라운드</span>
+            <input id="rounds" type="number" min="1" max="20" value="3">
+          </label>
+          <label class="field">
+            <span class="label">정리 담당</span>
+            <select id="judge">
+              <option value="">없음</option>
+              <option value="claude">Claude</option>
+              <option value="gpt">GPT</option>
+              <option value="gemini">Gemini</option>
+            </select>
+          </label>
+        </div>
+
+        <fieldset class="field">
+          <legend class="label">발언 길이</legend>
+          <div class="segmented" id="length">
+            <label><input type="radio" name="length" value="short"><span>짧게</span></label>
+            <label><input type="radio" name="length" value="medium" checked><span>보통</span></label>
+            <label><input type="radio" name="length" value="long"><span>길게</span></label>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="btn primary block" id="startBtn">토론 시작</button>
+        <p class="hint" id="setupError" role="alert"></p>
+      </form>
+    </aside>
+
+    <section class="stage">
+      <div class="stage-head">
+        <div class="stage-title">
+          <h2 id="stageTopic">주제를 정하고 토론을 시작하세요</h2>
+          <span id="roundInfo" class="round-info"></span>
+        </div>
+        <div class="controls">
+          <button class="btn" id="pauseBtn" hidden>일시정지</button>
+          <button class="btn" id="resumeBtn" hidden>계속</button>
+          <button class="btn" id="skipBtn" hidden>이번 차례 건너뛰기</button>
+          <button class="btn danger" id="stopBtn" hidden>중단</button>
+          <button class="btn" id="moreBtn" hidden>한 라운드 더</button>
+          <button class="btn" id="summaryBtn" hidden>정리 요청</button>
+          <button class="btn" id="exportBtn" hidden>기록 저장</button>
+          <button class="btn" id="resetBtn" hidden>새 토론</button>
+        </div>
+      </div>
+
+      <div id="feed" class="feed" aria-live="polite">
+        <div class="empty" id="emptyState">
+          <p>Claude, GPT, Gemini가 차례로 발언하며 서로의 주장에 반응합니다.</p>
+          <p>토론 중에는 아래 입력창으로 사회자처럼 끼어들 수 있어요.</p>
+        </div>
+      </div>
+
+      <form id="composer" class="composer">
+        <textarea id="userInput" rows="1" placeholder="사회자로 한마디 하기 (다음 발언 전에 전달됩니다)" disabled></textarea>
+        <button class="btn primary" type="submit" id="sendBtn" disabled>보내기</button>
+      </form>
+    </section>
+  </main>
+
+  <template id="participantTpl">
+    <li class="participant">
+      <div class="p-head">
+        <label class="p-toggle">
+          <input type="checkbox" class="p-enabled" checked>
+          <span class="avatar"></span>
+          <span class="p-name"></span>
+        </label>
+        <span class="p-badge"></span>
+        <div class="p-order">
+          <button type="button" class="icon-btn p-up" aria-label="위로">▲</button>
+          <button type="button" class="icon-btn p-down" aria-label="아래로">▼</button>
+        </div>
+      </div>
+      <div class="p-body">
+        <input class="p-model" type="text" spellcheck="false" aria-label="모델">
+        <input class="p-stance" type="text" placeholder="입장/역할 (선택) 예: 찬성, 회의론자" aria-label="입장">
+      </div>
+    </li>
+  </template>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
